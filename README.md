@@ -1,4 +1,4 @@
 # MY SCRIPTs!
 
 目前存放腳本：
-1. BVBRC_GenomeDataDownloader
+1. BVBRC_GenomeDataDownloader (python, bash shell)
