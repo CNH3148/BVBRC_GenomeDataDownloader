@@ -8,7 +8,7 @@ print("Please enter csv_file ABSOLUTE path: ")
 csv_file = input()
 print(csv_file, type(csv_file))
 
-# 使用 csv 模組，讀取 CSV 檔案的第一行，並將其分割為四個欄位
+# 使用 csv 模組，讀取 CSV 檔案的第一行，並將其依據 "," 分割欄位
 with open(csv_file) as f:
   rows = csv.reader(f, delimiter=",")
   diseases = next(rows) # 取得第一行，即病症的名稱
@@ -68,8 +68,6 @@ for i, disease in enumerate(diseases):
                     with open("error-ids.txt", "a") as error_ids:
                         error_ids.write(id.strip() + "\n")
 
-                # os.system("wget " + ftp_url + id.strip() + "/" + id.strip() + format)
-
         # 離開 format 的資料夾，返回上一層
         os.chdir("..")
     ###################################################################################################################
@@ -81,7 +79,6 @@ for i, disease in enumerate(diseases):
     以下的程式碼，使的最後產生的 GFF 檔案會包含 .fna 的內容；可以輸入 Roary 進行 pan-genome 分析。
 
     1) 會將 .fna 每條 contigs 的 FASTA 標題開頭加上 "accn|" 。
-    (如：>accn|SPUA01000001   SPUA01000001.1   [Klebsiella pneumoniae strain NICU_1_P7 | 573.31029])
     
     2) 將所有 .gff 檔案從 "./.PATRIC.gff" 資料夾移動到上一層目錄，也就是當前的 disease 資料夾。
     
@@ -177,7 +174,7 @@ for i, disease in enumerate(diseases):
         with open("./.PATRIC.gff/" + id.strip() + ".PATRIC.gff", "a") as gff:
 
             # 新增一行 "##FASTA" 標籤
-            gff.write("##FASTA\n")
+            gff.write("\n##FASTA\n")
 
             # 將 .fna 的內容附加到 .gff 文件最後
             with open("./.fna/" + id.strip() + ".fna") as fna:
@@ -185,13 +182,18 @@ for i, disease in enumerate(diseases):
         
         # 移動 .gff 檔案到當前的 disease 資料夾
         subprocess.run(["mv", "./.PATRIC.gff/" + id.strip() + ".PATRIC.gff", "."])
+
+        # 移動 GFF 下載失敗的清單至 pwd
+        subprocess.run(["mv", "./.PATRIC.gff/error-ids.txt", "./GFF-fail-to-fetch-ids.txt"])
+        # 移動 FNA 下載失敗的清單至 pwd
+        subprocess.run(["mv", "./.fna/error-ids.txt", "./FNA-fail-to-fetch-ids.txt"])
         # ----------------------------------------------------------------------------------------
 
-    # # 刪除 .fna 資料夾
-    # os.system("rm -r ./.fna")
+    # 刪除 .fna 資料夾
+    os.system("rm -r ./.fna")
     
-    # # 刪除 .PATRIC.gff 資料夾
-    # os.system("rm -r ./.PATRIC.gff")                     
+    # 刪除 .PATRIC.gff 資料夾
+    os.system("rm -r ./.PATRIC.gff")                     
             
     ########################################################################################################################
 
