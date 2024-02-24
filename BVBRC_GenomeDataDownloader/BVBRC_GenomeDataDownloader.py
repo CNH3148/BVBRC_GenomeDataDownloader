@@ -207,34 +207,44 @@ for i, disease in enumerate(diseases):
     ############################################################################################################################
     
     # (5) 整理檔案下載狀況的報告
+        
+    # 建立存放問題檔案數目的變數 (初始值為 0)
+    num_of_fail_to_fetch_gff_ids = 0
+    num_of_empty_gff_ids = 0
+    num_of_fail_to_fetch_fna_ids = 0
+    num_of_empty_fna_ids = 0
 
     # 移動 GFF 下載失敗的清單至 ../download-stat-report/
-    subprocess.run(["mv", "./.PATRIC.gff/error-ids.txt", "../download-stat-report/" + disease + "-GFF-fail-to-fetch-ids.txt"])
+    result = subprocess.run(["mv", "./.PATRIC.gff/error-ids.txt", "../download-stat-report/" + disease + "-GFF-fail-to-fetch-ids.txt"])
     
     # 取得 GFF 下載失敗的 ID 個數
-    with open("../download-stat-report/" + disease + "-GFF-fail-to-fetch-ids.txt") as f:
-        num_of_fail_to_fetch_gff_ids = len(f.readlines())
+    if result.returncode == 0:
+        with open("../download-stat-report/" + disease + "-GFF-fail-to-fetch-ids.txt") as f:
+            num_of_fail_to_fetch_gff_ids = len(f.readlines())
 
     # 移動 GFF 空檔案的清單至 ../download-stat-report/
-    subprocess.run(["mv", "./.PATRIC.gff/empty-ids.txt", "../download-stat-report/" + disease + "-GFF-empty-ids.txt"])
+    result = subprocess.run(["mv", "./.PATRIC.gff/empty-ids.txt", "../download-stat-report/" + disease + "-GFF-empty-ids.txt"])
     
     # 取得 GFF 空檔案的 ID 個數
-    with open("../download-stat-report/" + disease + "-GFF-empty-ids.txt") as f:
-        num_of_empty_gff_ids = len(f.readlines())
+    if result.returncode == 0:
+        with open("../download-stat-report/" + disease + "-GFF-empty-ids.txt") as f:
+            num_of_empty_gff_ids = len(f.readlines())
 
     # 移動 FNA 下載失敗的清單至 ../download-stat-report/
-    subprocess.run(["mv", "./.fna/error-ids.txt", "../download-stat-report/" + disease + "-FNA-fail-to-fetch-ids.txt"])
+    result = subprocess.run(["mv", "./.fna/error-ids.txt", "../download-stat-report/" + disease + "-FNA-fail-to-fetch-ids.txt"])
     
     # 取得 FNA 下載失敗的 ID 個數
-    with open("../download-stat-report/" + disease + "-FNA-fail-to-fetch-ids.txt") as f:
-        num_of_fail_to_fetch_fna_ids = len(f.readlines())
+    if result.returncode == 0:
+        with open("../download-stat-report/" + disease + "-FNA-fail-to-fetch-ids.txt") as f:
+            num_of_fail_to_fetch_fna_ids = len(f.readlines())
 
     # 移動 FNA 空檔案的清單至 ../download-stat-report/
-    subprocess.run(["mv", "./.fna/empty-ids.txt", "../download-stat-report/" + disease +"-FNA-empty-ids.txt"])
+    result = subprocess.run(["mv", "./.fna/empty-ids.txt", "../download-stat-report/" + disease +"-FNA-empty-ids.txt"])
 
     # 取得 FNA 空檔案的 ID 個數
-    with open("../download-stat-report/" + disease + "-FNA-empty-ids.txt") as f:
-        num_of_empty_fna_ids = len(f.readlines())
+    if result.returncode == 0:
+        with open("../download-stat-report/" + disease + "-FNA-empty-ids.txt") as f:
+            num_of_empty_fna_ids = len(f.readlines())
 
     # 紀錄統計資料 (headings: "Disease,Num_of_query_IDs,Num_of_successfully_merged_IDs,Num_of_failed_to_fetch_GFF_IDs,Num_of_empty_GFF_IDs,Num_of_failed_to_fetch_FNA_IDs,Num_of_empty_FNA_IDs\n")
     with open("../download-stat-report/statistics.csv", "a") as stat:
