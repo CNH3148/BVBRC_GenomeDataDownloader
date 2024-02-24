@@ -23,6 +23,14 @@ formats = [".PATRIC.gff", ".fna"]
 # 顯示當前工作目錄
 print("Current working directory:", os.getcwd())
 
+# 建立一個資料夾，存放檔案下載狀況的報告
+os.mkdir("download-stat-report")
+
+# 設定 ./download-stat-report/statistics.csv 的標頭
+with open("./download-stat-report/statistics.csv", "w+") as stat:
+    stat.write("Disease,Num_of_query_IDs,Num_of_successfully_merged_IDs,Num_of_failed_to_fetch_GFF_IDs,Num_of_empty_GFF_IDs,Num_of_failed_to_fetch_FNA_IDs,Num_of_empty_FNA_IDs\n")
+
+
 # %%
 # 對於每一種病症，建立一個資料夾，並進入
 for i, disease in enumerate(diseases):
@@ -64,9 +72,23 @@ for i, disease in enumerate(diseases):
                 
                 result = subprocess.run(["wget", ftp_url + id.strip() + "/" + id.strip() + format])
 
+                # 若下載失敗，將 genome ID 寫入 error-ids.txt
                 if result.returncode != 0:
                     with open("error-ids.txt", "a") as error_ids:
                         error_ids.write(id.strip() + "\n")
+
+                # 即便下載成功，也要檢查內容是否有必要的資訊；否則也只是下載到一個空檔案
+                # 這種狀況的起因是 BV-BRC 的 FTP site 中有些 GFF 檔案只有前三行 META DATA，沒有任何 feature 的資訊；有些 FNA 檔案中完全沒有任何內容
+                # 而一般正常的檔案，似乎都是幾百行幾千行起跳的。
+                # 因此我打算設一個檢查機制：若檔案的內容不足 6 行，就視為無效檔案，並將其刪除；並將 genome ID 寫入 empty-ids.txt
+                else:
+                    with open(id.strip() + format) as file:
+                        lines = file.readlines()
+                        if len(lines) < 6:
+                            os.system("rm " + id.strip() + format)
+                            with open("empty-ids.txt", "a") as empty_ids:
+                                empty_ids.write(id.strip() + "\n")
+
 
         # 離開 format 的資料夾，返回上一層
         os.chdir("..")
@@ -182,12 +204,43 @@ for i, disease in enumerate(diseases):
         
         # 移動 .gff 檔案到當前的 disease 資料夾
         subprocess.run(["mv", "./.PATRIC.gff/" + id.strip() + ".PATRIC.gff", "."])
+    ############################################################################################################################
+    
+    # (5) 整理檔案下載狀況的報告
 
-        # 移動 GFF 下載失敗的清單至 pwd
-        subprocess.run(["mv", "./.PATRIC.gff/error-ids.txt", "./GFF-fail-to-fetch-ids.txt"])
-        # 移動 FNA 下載失敗的清單至 pwd
-        subprocess.run(["mv", "./.fna/error-ids.txt", "./FNA-fail-to-fetch-ids.txt"])
-        # ----------------------------------------------------------------------------------------
+    # 移動 GFF 下載失敗的清單至 ../download-stat-report/
+    subprocess.run(["mv", "./.PATRIC.gff/error-ids.txt", "../download-stat-report/" + disease + "-GFF-fail-to-fetch-ids.txt"])
+    
+    # 取得 GFF 下載失敗的 ID 個數
+    with open("../download-stat-report/" + disease + "-GFF-fail-to-fetch-ids.txt") as f:
+        num_of_fail_to_fetch_gff_ids = len(f.readlines())
+
+    # 移動 GFF 空檔案的清單至 ../download-stat-report/
+    subprocess.run(["mv", "./.PATRIC.gff/empty-ids.txt", "../download-stat-report/" + disease + "-GFF-empty-ids.txt"])
+    
+    # 取得 GFF 空檔案的 ID 個數
+    with open("../download-stat-report/" + disease + "-GFF-empty-ids.txt") as f:
+        num_of_empty_gff_ids = len(f.readlines())
+
+    # 移動 FNA 下載失敗的清單至 ../download-stat-report/
+    subprocess.run(["mv", "./.fna/error-ids.txt", "../download-stat-report/" + disease + "-FNA-fail-to-fetch-ids.txt"])
+    
+    # 取得 FNA 下載失敗的 ID 個數
+    with open("../download-stat-report/" + disease + "-FNA-fail-to-fetch-ids.txt") as f:
+        num_of_fail_to_fetch_fna_ids = len(f.readlines())
+
+    # 移動 FNA 空檔案的清單至 ../download-stat-report/
+    subprocess.run(["mv", "./.fna/empty-ids.txt", "../download-stat-report/" + disease +"-FNA-empty-ids.txt"])
+
+    # 取得 FNA 空檔案的 ID 個數
+    with open("../download-stat-report/" + disease + "-FNA-empty-ids.txt") as f:
+        num_of_empty_fna_ids = len(f.readlines())
+
+    # 紀錄統計資料 (headings: "Disease,Num_of_query_IDs,Num_of_successfully_merged_IDs,Num_of_failed_to_fetch_GFF_IDs,Num_of_empty_GFF_IDs,Num_of_failed_to_fetch_FNA_IDs,Num_of_empty_FNA_IDs\n")
+    with open("../download-stat-report/statistics.csv", "a") as stat:
+        stat.write(disease + "," + str(len(rstrip_ids)) + "," + str(len(ids_ready_to_merge)) + "," + str(num_of_fail_to_fetch_gff_ids) + "," + str(num_of_empty_gff_ids) + "," + str(num_of_fail_to_fetch_fna_ids) + "," + str(num_of_empty_fna_ids) + "\n")
+
+    ########################################################################################################################
 
     # 刪除 .fna 資料夾
     os.system("rm -r ./.fna")
